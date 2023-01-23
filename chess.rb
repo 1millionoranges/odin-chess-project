@@ -200,6 +200,11 @@ class GameBoard
         if legal
             @board[pos2[0]][pos2[1]] = @board[pos1[0]][pos1[1]]
             @board[pos1[0]][pos1[1]] = nil
+            if Pawn === piece
+                if pos2[0] == 0 || pos2[0] == 7
+                    @board[pos2[0]][pos2[1]] = Queen.new(piece.team)
+                end
+            end
             return true
         end
         return false
