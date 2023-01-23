@@ -186,12 +186,12 @@ class GameBoard
         @board = 
        [[Rook.new(0), Knight.new(0), Bishop.new(0), Queen.new(0), King.new(0), Bishop.new(0), Knight.new(0), Rook.new(0)],                                      
         [Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0)],                          
-        [nil, nil, Pawn.new(1), nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
-        [nil, nil, nil, nil, nil, nil, nil, nil]]
+        [Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1)],                                      
+        [Rook.new(1), Knight.new(1), Bishop.new(1), Queen.new(1), King.new(1), Bishop.new(1), Knight.new(1), Rook.new(1)]]
     end
     def move_piece(pos1, pos2)
         piece = self.get_spot(pos1)
@@ -311,5 +311,17 @@ end
 
 board = GameBoard.new()
 board.reset_game
-board.show_board
-board.show_legal_moves([1,1])
+
+while true do
+    pos_1_0 = gets.chomp.to_i
+    pos_1_1 = gets.chomp.to_i
+    pos_1 = [pos_1_0, pos_1_1]
+    board.show_legal_moves(pos_1)
+    pos_2_0 = gets.chomp.to_i
+    pos_2_1 = gets.chomp.to_i
+    pos_2 = [pos_2_0, pos_2_1]
+    board.move_piece(pos_1, pos_2)
+    board.show_board
+end
+
+
