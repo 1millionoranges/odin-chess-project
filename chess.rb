@@ -19,10 +19,12 @@ class Piece
         xdiff = pos2[1] - pos1[1]
         return xdiff.abs == ydiff.abs
     end
-    def is_orthogonal?(pos1, pos2)
+    def is_king_move?(pos1, pos2)
         (pos1[0] - pos2[0]).abs<= 1 && (pos1[1] - pos2[1]).abs<= 1
     end
-
+    def is_orthogonal?(pos1, pos2)
+        ((pos1[0] == pos2[0]) || (pos1[1] == pos2[1]))
+    end
 end
 
 class King < Piece
@@ -33,7 +35,7 @@ class King < Piece
     def legal_move?(pos1, pos2, game_board)
         if(pos1 == pos2)
             return false
-        elsif(is_orthogonal(pos1, pos2))
+        elsif(is_king_move?(pos1, pos2))
             if can_move_to?(game_board, pos2)
                 return true
             end
@@ -51,7 +53,7 @@ class Rook < Piece
     def legal_move?(pos1, pos2, game_board)
         if(pos1 == pos2)
             return false
-        elsif(pos1[0] == pos2[0]) || (pos1[1] == pos2[1])
+        elsif(is_orthogonal?(pos1,pos2))
             spots = game_board.between_ortho(pos1, pos2)
             for spot in spots
                 if game_board.get_spot(spot)
@@ -129,7 +131,7 @@ class GameBoard
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, Rook.new(0), King.new(1), nil, nil, nil],                                      
-        [nil, nil, nil, nil, nil, nil, nil, nil],                                      
+        [nil, Queen.new(0), nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, Bishop.new(0), nil, nil, nil, nil]]
@@ -256,4 +258,4 @@ board.show_board
 board.move_piece([7,3],[6,2])
 board.show_board
 board.show_legal_moves([6,2])
-board.show_legal_moves([3,3])
+board.show_legal_moves([4,1])
