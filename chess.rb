@@ -140,3 +140,4 @@ board.reset_game
 board.show_board
 board.move_piece([3,3],[3,5])
 board.show_board
+board.show_board
