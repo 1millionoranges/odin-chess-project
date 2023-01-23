@@ -14,19 +14,26 @@ class Piece
         end
         return true
     end
+    def is_diagonal?(pos1, pos2)
+        ydiff = pos2[0] - pos1[0]
+        xdiff = pos2[1] - pos1[1]
+        return xdiff.abs == ydiff.abs
+    end
+    def is_orthogonal?(pos1, pos2)
+        (pos1[0] - pos2[0]).abs<= 1 && (pos1[1] - pos2[1]).abs<= 1
+    end
+
 end
 
 class King < Piece
-    
     def initialize(team)
         @team = team
         @symbol = "K"
     end
-
     def legal_move?(pos1, pos2, game_board)
         if(pos1 == pos2)
             return false
-        elsif((pos1[0] - pos2[0]).abs<= 1 && (pos1[1] - pos2[1]).abs<= 1)
+        elsif(is_orthogonal(pos1, pos2))
             if can_move_to?(game_board, pos2)
                 return true
             end
@@ -64,11 +71,7 @@ class Bishop < Piece
         @team = team
         @symbol = "B"
     end
-    def is_diagonal?(pos1, pos2)
-        ydiff = pos2[0] - pos1[0]
-        xdiff = pos2[1] - pos1[1]
-        return xdiff.abs == ydiff.abs
-    end
+    
     def legal_move?(pos1, pos2, game_board)
         if(pos1 == pos2)
             return false
@@ -89,6 +92,32 @@ class Bishop < Piece
     end
 end
 
+class Queen < Piece
+    def initialize(team)
+        @team = team
+        @symbol = "Q"
+    end
+    def legal_move?(pos1, pos2, game_board)
+        if(pos1 == pos2)
+            return false
+        elsif is_diagonal?(pos1, pos2)
+            spots = game_board.between_diag(pos1, pos2)
+        elsif is_orthogonal?(pos1, pos2)
+            spots = game_board.between_ortho(pos1, pos2)
+        else
+            return false
+        end
+        for spot in spots
+            if game_board.get_spot(spot)
+                return false
+            end
+        end
+        if can_move_to?(game_board, pos2)
+            return true
+        end
+        return false
+    end
+end
 
 class GameBoard
     def initialize()
@@ -111,10 +140,13 @@ class GameBoard
         if legal
             @board[pos2[0]][pos2[1]] = @board[pos1[0]][pos1[1]]
             @board[pos1[0]][pos1[1]] = nil
+            return true
         end
+        return false
     end
 
     def get_spot(pos)
+    #    p "checking #{pos[0]} and #{pos[1]}"
         @board[pos[0]][pos[1]]
     end
 
@@ -191,6 +223,29 @@ class GameBoard
         end
         print "\n"
     end
+    def show_legal_moves(pos)
+        piece = get_spot(pos)
+        legal_moves = []
+        for i in (0..7)
+            for j in (0..7)
+                if piece.legal_move?(pos, [i,j], self)
+                    print "X"
+                    legal_moves << [i,j]
+                else
+                    spot = @board[i][j]
+                    if spot
+                        print(spot.symbol)
+                    else
+                        print("_")
+                    end
+                end
+            end
+            print "\n"
+        end
+        print "\n"
+        p legal_moves
+    end
+
 end
 
 board = GameBoard.new()
@@ -198,5 +253,7 @@ board.reset_game
 board.show_board
 board.move_piece([3,3],[3,5])
 board.show_board
-board.move_piece([7,3],[6,1])
+board.move_piece([7,3],[6,2])
 board.show_board
+board.show_legal_moves([6,2])
+board.show_legal_moves([3,3])
