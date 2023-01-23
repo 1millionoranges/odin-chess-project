@@ -72,10 +72,20 @@ class Bishop < Piece
     def legal_move?(pos1, pos2, game_board)
         if(pos1 == pos2)
             return false
-        elsif !is_diagonal(pos1, pos2)
+        elsif !is_diagonal?(pos1, pos2)
             return false
+        else
+            spots = game_board.between_diag(pos1, pos2)
+            for spot in spots
+                if game_board.get_spot(spot)
+                    return false
+                end
+            end
+            if can_move_to?(game_board, pos2)
+                return true
+            end
         end
-        return true
+        return false
     end
 end
 
@@ -93,7 +103,7 @@ class GameBoard
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
-        [nil, nil, nil, nil, nil, nil, nil, nil]]
+        [nil, nil, nil, Bishop.new(0), nil, nil, nil, nil]]
     end
     def move_piece(pos1, pos2)
         piece = self.get_spot(pos1)
@@ -188,5 +198,5 @@ board.reset_game
 board.show_board
 board.move_piece([3,3],[3,5])
 board.show_board
-
-p board.between_diag([6,6], [3,3])
+board.move_piece([7,3],[6,1])
+board.show_board
