@@ -1,10 +1,24 @@
 class Piece
     attr_reader :symbol
     attr_reader :team
+    @@black_pieces = []
+    @@white_pieces = []
     def initialize(team)
         @team = team
+        if @team == 0
+            @@black_pieces << self
+        elsif @team == 1
+            @@white_pieces << self
+        end
         @symbol = " "
     end
+    def self.list_black_pieces
+        return @@black_pieces
+    end
+    def self.list_white_pieces
+        return @@white_pieces
+    end
+
     def can_move_to?(game_board, pos)
         if(!game_board.get_spot(pos))
             return true
@@ -25,11 +39,12 @@ class Piece
     def is_orthogonal?(pos1, pos2)
         ((pos1[0] == pos2[0]) || (pos1[1] == pos2[1]))
     end
+
 end
 
 class King < Piece
     def initialize(team)
-        @team = team
+        super(team)
         @symbol = "K"
     end
     def legal_move?(pos1, pos2, game_board)
@@ -46,7 +61,7 @@ end
 
 class Rook < Piece
     def initialize(team)
-        @team = team
+        super(team)
         @symbol = "R"
     end
 
@@ -70,7 +85,7 @@ end
 
 class Bishop < Piece
     def initialize(team)
-        @team = team
+        super(team)
         @symbol = "B"
     end
     
@@ -96,7 +111,7 @@ end
 
 class Queen < Piece
     def initialize(team)
-        @team = team
+        super(team)
         @symbol = "Q"
     end
     def legal_move?(pos1, pos2, game_board)
@@ -123,7 +138,7 @@ end
 
 class Knight < Piece
     def initialize (team)
-        @team = team
+        super(team)
         @symbol = "N"
     end
     def legal_move?(pos1, pos2, game_board)
@@ -137,7 +152,7 @@ class Knight < Piece
 end
 class Pawn < Piece
     def initialize(team)
-        @team = team
+        super(team)
         @symbol = "p"
     end
     def legal_move?(pos1, pos2, game_board)
@@ -179,10 +194,13 @@ end
 
 
 class GameBoard
+    attr_reader :game_lost
     def initialize()
         @board = Array.new(8,Array.new(8))
+        @game_lost = false
     end
     def reset_game
+        @game_lost = false
         @board = 
        [[Rook.new(0), Knight.new(0), Bishop.new(0), Queen.new(0), King.new(0), Bishop.new(0), Knight.new(0), Rook.new(0)],                                      
         [Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0)],                          
@@ -198,6 +216,11 @@ class GameBoard
         return false if !piece
         legal = piece.legal_move?(pos1, pos2, self)
         if legal
+            piece = get_spot([pos2[0],pos2[1]])
+            if King === piece
+                @game_lost = piece.team
+            end
+
             @board[pos2[0]][pos2[1]] = @board[pos1[0]][pos1[1]]
             @board[pos1[0]][pos1[1]] = nil
             if Pawn === piece
@@ -327,6 +350,10 @@ while true do
     pos_2 = [pos_2_0, pos_2_1]
     board.move_piece(pos_1, pos_2)
     board.show_board
+    if board.game_lost
+        print "\n#{board.game_lost} team just lost the game!"
+        break
+    end
 end
 
 
