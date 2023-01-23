@@ -135,6 +135,47 @@ class Knight < Piece
         return false
     end
 end
+class Pawn < Piece
+    def initialize(team)
+        @team = team
+        @symbol = "p"
+    end
+    def legal_move?(pos1, pos2, game_board)
+        if @team == 0
+            starting_line = 1
+            direction = 1
+        elsif @team == 1
+            starting_line = 6
+            direction = -1
+        end
+        if pos2[1] == pos1[1]
+            legal_push = false
+            if pos2[0] == pos1[0] + direction
+                legal_push = true
+            elsif pos1[0] == starting_line
+                if pos2[0] == pos1[0] + (2 * direction)
+                    legal_push = true
+                end
+            end
+            
+            return legal_push && (game_board.get_spot(pos2) == nil)
+
+        end
+        if (pos2[1] - pos1[1]).abs == 1
+            if pos2[0] == pos1[0] + direction
+                spot = game_board.get_spot(pos2)
+                if spot
+                    if(spot.team != @team)
+                        return true
+                    else
+                        return false
+                    end
+                end
+            end
+        end
+        return false
+    end
+end
 
 
 class GameBoard
@@ -143,17 +184,18 @@ class GameBoard
     end
     def reset_game
         @board = 
-       [[nil, nil, nil, King.new(0), nil, nil, nil, nil],                                      
+       [[Rook.new(0), Knight.new(0), Bishop.new(0), Queen.new(0), King.new(0), Bishop.new(0), Knight.new(0), Rook.new(0)],                                      
+        [Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0), Pawn.new(0)],                          
+        [nil, nil, Pawn.new(1), nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
-        [nil, nil, nil, Rook.new(0), King.new(1), nil, nil, nil],                                      
-        [nil, Queen.new(0), nil, nil, nil, nil, nil, nil],                                      
-        [nil, nil, nil, nil, nil, nil, Knight.new(1), nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
-        [nil, nil, nil, Bishop.new(0), nil, nil, nil, nil]]
+        [nil, nil, nil, nil, nil, nil, nil, nil],                                      
+        [nil, nil, nil, nil, nil, nil, nil, nil]]
     end
     def move_piece(pos1, pos2)
         piece = self.get_spot(pos1)
+        return false if !piece
         legal = piece.legal_move?(pos1, pos2, self)
         if legal
             @board[pos2[0]][pos2[1]] = @board[pos1[0]][pos1[1]]
@@ -243,6 +285,7 @@ class GameBoard
     end
     def show_legal_moves(pos)
         piece = get_spot(pos)
+        return false if !piece
         legal_moves = []
         for i in (0..7)
             for j in (0..7)
@@ -269,9 +312,4 @@ end
 board = GameBoard.new()
 board.reset_game
 board.show_board
-board.move_piece([3,3],[3,5])
-board.show_board
-board.move_piece([7,3],[6,2])
-board.show_board
-board.show_legal_moves([6,2])
-board.show_legal_moves([5,6])
+board.show_legal_moves([1,1])
