@@ -121,6 +121,22 @@ class Queen < Piece
     end
 end
 
+class Knight < Piece
+    def initialize (team)
+        @team = team
+        @symbol = "N"
+    end
+    def legal_move?(pos1, pos2, game_board)
+        ydiff = (pos1[0] - pos2[0]).abs
+        xdiff = (pos1[1] - pos2[1]).abs
+        if ((ydiff == 1 && xdiff == 2) || (ydiff == 2 && xdiff == 1))
+            return can_move_to?(game_board, pos2)
+        end
+        return false
+    end
+end
+
+
 class GameBoard
     def initialize()
         @board = Array.new(8,Array.new(8))
@@ -132,7 +148,7 @@ class GameBoard
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, Rook.new(0), King.new(1), nil, nil, nil],                                      
         [nil, Queen.new(0), nil, nil, nil, nil, nil, nil],                                      
-        [nil, nil, nil, nil, nil, nil, nil, nil],                                      
+        [nil, nil, nil, nil, nil, nil, Knight.new(1), nil],                                      
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [nil, nil, nil, Bishop.new(0), nil, nil, nil, nil]]
     end
@@ -245,7 +261,7 @@ class GameBoard
             print "\n"
         end
         print "\n"
-        p legal_moves
+        return legal_moves
     end
 
 end
@@ -258,4 +274,4 @@ board.show_board
 board.move_piece([7,3],[6,2])
 board.show_board
 board.show_legal_moves([6,2])
-board.show_legal_moves([4,1])
+board.show_legal_moves([5,6])
