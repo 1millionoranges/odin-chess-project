@@ -59,6 +59,27 @@ class Rook < Piece
     end
 end
 
+class Bishop < Piece
+    def initialize(team)
+        @team = team
+        @symbol = "B"
+    end
+    def is_diagonal?(pos1, pos2)
+        ydiff = pos2[0] - pos1[0]
+        xdiff = pos2[1] - pos1[1]
+        return xdiff.abs == ydiff.abs
+    end
+    def legal_move?(pos1, pos2, game_board)
+        if(pos1 == pos2)
+            return false
+        elsif !is_diagonal(pos1, pos2)
+            return false
+        end
+        return true
+    end
+end
+
+
 class GameBoard
     def initialize()
         @board = Array.new(8,Array.new(8))
@@ -118,6 +139,33 @@ class GameBoard
     end
 
     def between_diag(pos1, pos2)
+        if(pos1[1] < pos2[1])
+            lower = pos1
+            upper = pos2
+            if(pos1[0] < pos2[0])
+                y_iter = 1
+            else
+                y_iter = -1
+            end
+        else
+            lower = pos2
+            upper = pos1
+            if(pos1[0] < pos2[0])
+                y_iter = -1
+            else
+                y_iter = 1
+            end
+        end
+        iterations = (upper[1] - lower[1]) - 1
+        x = lower[1]
+        y = lower[0]
+        spots = []
+        iterations.times do
+            x += 1
+            y += y_iter
+            spots << [y, x]
+        end
+        return spots
     end
     def show_board
         for row in @board
@@ -140,4 +188,5 @@ board.reset_game
 board.show_board
 board.move_piece([3,3],[3,5])
 board.show_board
-board.show_board
+
+p board.between_diag([6,6], [3,3])
