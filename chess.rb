@@ -51,6 +51,7 @@ class King < Piece
         @symbol = "K"
     end
     def legal_move?(pos1, pos2, game_board)
+        return false if !game_board.is_on_board(pos2)
         if(pos1 == pos2)
             return false
         elsif(is_king_move?(pos1, pos2))
@@ -87,6 +88,7 @@ class Rook < Piece
     end
 
     def legal_move?(pos1, pos2, game_board)
+        return false if !game_board.is_on_board(pos2)
         if(pos1 == pos2)
             return false
         elsif(is_orthogonal?(pos1,pos2))
@@ -111,6 +113,7 @@ class Bishop < Piece
     end
     
     def legal_move?(pos1, pos2, game_board)
+        return false if !game_board.is_on_board(pos2)
         if(pos1 == pos2)
             return false
         elsif !is_diagonal?(pos1, pos2)
@@ -136,6 +139,7 @@ class Queen < Piece
         @symbol = "Q"
     end
     def legal_move?(pos1, pos2, game_board)
+        return false if !game_board.is_on_board(pos2)
         if(pos1 == pos2)
             return false
         elsif is_diagonal?(pos1, pos2)
@@ -163,6 +167,7 @@ class Knight < Piece
         @symbol = "N"
     end
     def legal_move?(pos1, pos2, game_board)
+        return false if !game_board.is_on_board(pos2)
         ydiff = (pos1[0] - pos2[0]).abs
         xdiff = (pos1[1] - pos2[1]).abs
         if ((ydiff == 1 && xdiff == 2) || (ydiff == 2 && xdiff == 1))
@@ -177,6 +182,7 @@ class Pawn < Piece
         @symbol = "p"
     end
     def legal_move?(pos1, pos2, game_board)
+        return false if !game_board.is_on_board(pos2)
         if @team == 0
             starting_line = 1
             direction = 1
@@ -233,6 +239,9 @@ class GameBoard
         [nil, nil, nil, nil, nil, nil, nil, nil],                                      
         [Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1)],                                      
         [Rook.new(1), Knight.new(1), Bishop.new(1), Queen.new(1), King.new(1), Bishop.new(1), Knight.new(1), Rook.new(1)]]
+    end
+    def is_on_board(pos)
+        return !(pos[0] < 0 || pos[0] > 7 || pos[1] < 0 || pos[1] > 8)
     end
     def move_piece(pos1, pos2)
         piece = self.get_spot(pos1)
