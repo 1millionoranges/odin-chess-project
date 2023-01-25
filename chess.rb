@@ -3,15 +3,19 @@ class Piece
     attr_reader :symbol
     attr_reader :team
     attr_accessor :has_moved
+    attr_reader :opposite_team
     @@black_pieces = []
     @@white_pieces = []
     def initialize(team)
+        @opposite_team = 2
         @has_moved = false
         @team = team
         if @team == 0
             @@black_pieces << self
+            @opposite_team = 1
         elsif @team == 1
             @@white_pieces << self
+            @opposite_team = 0
         end
         @symbol = " "
     end
@@ -50,8 +54,12 @@ class King < Piece
         super(team)
         @symbol = "K"
     end
+    def is_attacking?(pos1, pos2, game_board)
+        return is_king_move?(pos1, pos2)
+    end
     def legal_move?(pos1, pos2, game_board)
-        return false if !game_board.is_on_board(pos2)
+        return false if game_board.is_king_in_check_after_move?(@team, pos1, pos2)
+        return false if !game_board.is_on_board?(pos2)
         if(pos1 == pos2)
             return false
         elsif(is_king_move?(pos1, pos2))
@@ -59,7 +67,7 @@ class King < Piece
                 return true
             end
         elsif(pos1[0] == pos2[0] && (pos1[1]-pos2[1]).abs == 2)
-            if self.has_moved
+            if self.has_moved || game_board.castled
                 return false
             else
                 if pos2[1] == 2
@@ -79,6 +87,12 @@ class King < Piece
         end
         return false
     end
+    def in_check?(pos, game_board)
+ #       p @opposite_team
+        return game_board.is_attacked?(pos, @opposite_team)
+    end
+    def self.in_checkmate?(pos1, game_board)
+    end
 end
 
 class Rook < Piece
@@ -86,9 +100,25 @@ class Rook < Piece
         super(team)
         @symbol = "R"
     end
-
+    def is_attacking?(pos1, pos2, game_board)
+        if(pos1 == pos2)
+            return false
+        elsif !is_orthogonal?(pos1, pos2)
+            return false
+        else
+            spots = game_board.between_ortho(pos1, pos2)
+            for spot in spots
+                if game_board.get_spot(spot)
+                    return false
+                end
+            end
+            return true
+        end
+        return false
+    end
     def legal_move?(pos1, pos2, game_board)
-        return false if !game_board.is_on_board(pos2)
+        return false if !game_board.is_on_board?(pos2)
+        return false if game_board.is_king_in_check_after_move?(@team, pos1, pos2)
         if(pos1 == pos2)
             return false
         elsif(is_orthogonal?(pos1,pos2))
@@ -111,9 +141,25 @@ class Bishop < Piece
         super(team)
         @symbol = "B"
     end
-    
+    def is_attacking?(pos1, pos2, game_board)
+        if(pos1 == pos2)
+            return false
+        elsif !is_diagonal?(pos1, pos2)
+            return false
+        else
+            spots = game_board.between_diag(pos1, pos2)
+            for spot in spots
+                if game_board.get_spot(spot)
+                    return false
+                end
+            end
+            return true
+        end
+        return false
+    end
     def legal_move?(pos1, pos2, game_board)
-        return false if !game_board.is_on_board(pos2)
+        return false if !game_board.is_on_board?(pos2)
+        return false if game_board.is_king_in_check_after_move?(@team, pos1, pos2)
         if(pos1 == pos2)
             return false
         elsif !is_diagonal?(pos1, pos2)
@@ -138,8 +184,24 @@ class Queen < Piece
         super(team)
         @symbol = "Q"
     end
+    def is_attacking?(pos1, pos2, game_board)
+        if is_diagonal?(pos1, pos2)
+            spots = game_board.between_diag(pos1, pos2)
+        elsif is_orthogonal?(pos1, pos2)
+            spots = game_board.between_ortho(pos1, pos2)
+        else
+            return false
+        end
+        for spot in spots
+            if game_board.get_spot(spot)
+                return false
+            end
+        end
+        return true
+    end
     def legal_move?(pos1, pos2, game_board)
-        return false if !game_board.is_on_board(pos2)
+        return false if !game_board.is_on_board?(pos2)
+        return false if game_board.is_king_in_check_after_move?(@team, pos1, pos2)
         if(pos1 == pos2)
             return false
         elsif is_diagonal?(pos1, pos2)
@@ -166,8 +228,16 @@ class Knight < Piece
         super(team)
         @symbol = "N"
     end
+    def is_attacking?(pos1, pos2, game_board)
+        ydiff = (pos1[0] - pos2[0]).abs
+        xdiff = (pos1[1] - pos2[1]).abs
+        if ((ydiff == 1 && xdiff == 2) || (ydiff == 2 && xdiff == 1))
+            return true
+        end
+    end
     def legal_move?(pos1, pos2, game_board)
-        return false if !game_board.is_on_board(pos2)
+        return false if !game_board.is_on_board?(pos2)
+        return false if game_board.is_king_in_check_after_move?(@team, pos1, pos2)
         ydiff = (pos1[0] - pos2[0]).abs
         xdiff = (pos1[1] - pos2[1]).abs
         if ((ydiff == 1 && xdiff == 2) || (ydiff == 2 && xdiff == 1))
@@ -181,8 +251,22 @@ class Pawn < Piece
         super(team)
         @symbol = "p"
     end
+    def is_attacking?(pos1, pos2, game_board)
+        if @team == 0
+            direction = 1
+        elsif @team == 1
+            direction = -1
+        end
+        if (pos2[1] - pos1[1]).abs == 1
+            if pos2[0] == pos1[0] + direction
+                return true
+            end
+        end
+        return false
+    end
     def legal_move?(pos1, pos2, game_board)
-        return false if !game_board.is_on_board(pos2)
+        return false if !game_board.is_on_board?(pos2)
+        return false if game_board.is_king_in_check_after_move?(@team, pos1, pos2)
         if @team == 0
             starting_line = 1
             direction = 1
@@ -222,10 +306,27 @@ end
 
 class GameBoard
     attr_reader :game_lost
+    attr_reader :castled
     def initialize()
         @board = Array.new(8,Array.new(8))
         @game_lost = false
         @castled = [false, false]
+    end
+    def copy()
+
+    end
+    def can_attack?(team, pos)
+        for i in (0..7)
+            for j in (0..7)
+                piece = get_spot([i,j])
+                if piece && piece.team == team
+                    if piece.legal_move?([i,j], pos, self)
+                        return true
+                    end
+                end
+            end
+        end
+        return false
     end
     def reset_game
         @castled = [false, false]
@@ -240,7 +341,7 @@ class GameBoard
         [Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1), Pawn.new(1)],                                      
         [Rook.new(1), Knight.new(1), Bishop.new(1), Queen.new(1), King.new(1), Bishop.new(1), Knight.new(1), Rook.new(1)]]
     end
-    def is_on_board(pos)
+    def is_on_board?(pos)
         return !(pos[0] < 0 || pos[0] > 7 || pos[1] < 0 || pos[1] > 8)
     end
     def move_piece(pos1, pos2)
@@ -251,7 +352,7 @@ class GameBoard
 
             rook_spot = legal[0]
             new_rook_spot = legal[1]
-            
+            @castled = true
             move_piece(rook_spot, new_rook_spot)
          #   return true
         end
@@ -273,12 +374,70 @@ class GameBoard
         end
         return false
     end
-
+    def is_attacked?(pos, team)
+        for i in (0..7)
+            for j in (0..7)
+                piece = get_spot([i,j])
+                if piece && piece.team == team && piece.is_attacking?([i,j], pos, self)
+              #      p "#{pos} is attacked by #{team}"
+                    return true                    
+                end
+            end
+        end
+      #  p "#{pos} is not attacked by #{team}"
+        return false
+    end
+    def is_king_in_check_after_move?(team, pos1, pos2)
+        pos1_orig = @board[pos1[0]][pos1[1]]
+        pos2_orig = @board[pos2[0]][pos2[1]]
+        @board[pos2[0]][pos2[1]] = pos1_orig
+        @board[pos1[0]][pos1[1]] = nil
+        is_in_check = false
+        for i in (0..7)
+            for j in (0..7)
+                piece = get_spot([i,j])
+                if King === piece
+        #            p "#{piece} is a King"
+                    if piece.team == team
+                        if piece.in_check?([i,j], self)
+                            is_in_check = true
+                        end
+                    end
+                end
+            end
+        end
+        @board[pos1[0]][pos1[1]] = pos1_orig
+        @board[pos2[0]][pos2[1]] = pos2_orig
+        return is_in_check
+    end
+    def is_king_in_check_after_every_move?(team)
+        a = get_every_legal_move(team)
+        pieces_arr = a[0]
+        moves_arr = a[1]
+    #    p pieces_arr
+   #     p moves_arr
+        for i in (0...pieces_arr.size)
+            piece = pieces_arr[i]
+   #         p i
+    #        p moves_arr[i]
+            if moves_arr[i].size > 0
+                for move in moves_arr[i]
+                    if !is_king_in_check_after_move?(team, piece, move)
+                        return false
+                    end
+                end
+            end
+        end
+        return true
+    end
     def get_spot(pos)
     #    p "checking #{pos[0]} and #{pos[1]}"
         @board[pos[0]][pos[1]]
     end
-
+    def force_move(pos1, pos2)
+        @board[pos2[0]][pos2[1]] = @board[pos1[0]][pos1[1]]
+        @board[pos1[0]][pos1[1]] = nil
+    end
     def between_ortho(pos1, pos2)
         spots = []
         if(pos1[0] != pos2[0])
@@ -359,15 +518,41 @@ class GameBoard
         end
         print "\n"
     end
-    def show_legal_moves(pos)
-        piece = get_spot(pos)
+    def get_all_legal_moves(pos)
+        piece = self.get_spot(pos)
         return false if !piece
         legal_moves = []
         for i in (0..7)
             for j in (0..7)
                 if piece.legal_move?(pos, [i,j], self)
-                    print "X "
                     legal_moves << [i,j]
+                end
+            end
+        end
+        return legal_moves
+    end
+    def get_every_legal_move(team)
+        all_pieces = []
+        all_moves = []
+        for i in (0..7)
+            for j in (0..7)
+                piece = get_spot([i,j])
+                if piece && piece.team == team
+                    all_pieces << [i,j]
+                    all_moves << get_all_legal_moves([i,j])
+                end
+            end
+        end
+        return [all_pieces, all_moves]
+    end
+    def show_legal_moves(pos)
+        piece = get_spot(pos)
+        return false if !piece
+        legal_moves = get_all_legal_moves(pos)
+        for i in (0..7)
+            for j in (0..7)
+                if legal_moves.include?([i,j])
+                    print "X "
                 else
                     spot = @board[i][j]
                     if spot
@@ -411,6 +596,15 @@ while true do
     file_2 = 'abcdefgh'.rindex(piece[0]).to_i
     rank_2 = 8 - piece[1].to_i
     board.move_piece([rank, file], [rank_2, file_2])
+    if board.is_king_in_check_after_every_move?(0)
+        board.show_board
+        print "blue wins by checkmate"
+        break
+    elsif board.is_king_in_check_after_every_move?(1)
+        board.show_board
+        print "red wins by checkmate"
+        break
+    end
     board.show_board
     if board.game_lost
         print "\n#{board.game_lost} team just lost the game!"
