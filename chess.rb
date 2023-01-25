@@ -1,3 +1,4 @@
+require 'colorize'
 class Piece
     attr_reader :symbol
     attr_reader :team
@@ -301,9 +302,16 @@ class GameBoard
         for row in @board
             for spot in row
                 if spot
-                    print(spot.symbol)
+                    if spot.team == 0
+                        print(spot.symbol.red)
+                        print(" ")
+                    else
+                        print(spot.symbol.blue)
+                        print(" ")
+                    end
+                    
                 else
-                    print("_")
+                    print("_ ")
                 end
                 
             end
@@ -323,9 +331,15 @@ class GameBoard
                 else
                     spot = @board[i][j]
                     if spot
-                        print(spot.symbol)
+                        if spot.team == 0
+                            print(spot.symbol.red)
+                            print(" ")
+                        else
+                            print(spot.symbol.blue)
+                            print(" ")
+                        end
                     else
-                        print("_")
+                        print("_ ")
                     end
                 end
             end
@@ -339,21 +353,21 @@ end
 
 board = GameBoard.new()
 board.reset_game
-
+board.show_board
 while true do
-    pos_1_0 = gets.chomp.to_i
-    pos_1_1 = gets.chomp.to_i
-    pos_1 = [pos_1_0, pos_1_1]
-    board.show_legal_moves(pos_1)
-    pos_2_0 = gets.chomp.to_i
-    pos_2_1 = gets.chomp.to_i
-    pos_2 = [pos_2_0, pos_2_1]
-    board.move_piece(pos_1, pos_2)
+    puts "Select a piece to move:"
+    piece = gets.chomp
+    file = 'abcdefgh'.rindex(piece[0]).to_i
+    rank = 8 - piece[1].to_i 
+    board.show_legal_moves([rank, file])
+    puts "Select a spot to move them to:"
+    piece = gets.chomp
+    file_2 = 'abcdefgh'.rindex(piece[0]).to_i
+    rank_2 = 8 - piece[1].to_i
+    board.move_piece([rank, file], [rank_2, file_2])
     board.show_board
     if board.game_lost
         print "\n#{board.game_lost} team just lost the game!"
         break
     end
 end
-
-
