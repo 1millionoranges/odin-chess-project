@@ -2,9 +2,11 @@ require 'colorize'
 class Piece
     attr_reader :symbol
     attr_reader :team
+    attr_accessor :has_moved
     @@black_pieces = []
     @@white_pieces = []
     def initialize(team)
+        @has_moved = false
         @team = team
         if @team == 0
             @@black_pieces << self
@@ -54,6 +56,24 @@ class King < Piece
         elsif(is_king_move?(pos1, pos2))
             if can_move_to?(game_board, pos2)
                 return true
+            end
+        elsif(pos1[0] == pos2[0] && (pos1[1]-pos2[1]).abs == 2)
+            if self.has_moved
+                return false
+            else
+                if pos2[1] == 2
+                    rook_spot = [pos2[0], 0]
+                    new_rook_spot = [pos2[0], 3]                    
+                elsif pos2[1] == 6
+                    rook_spot = [pos2[0], 7]
+                    new_rook_spot = [pos2[0], 5]
+                end
+                rook_spot_piece = game_board.get_spot(rook_spot)
+          #      p rook_spot_piece
+                return false if !(Rook === rook_spot_piece)
+                return false if rook_spot_piece.has_moved
+
+                return [rook_spot, new_rook_spot] if can_move_to?(game_board, pos2)
             end
         end
         return false
@@ -199,8 +219,10 @@ class GameBoard
     def initialize()
         @board = Array.new(8,Array.new(8))
         @game_lost = false
+        @castled = [false, false]
     end
     def reset_game
+        @castled = [false, false]
         @game_lost = false
         @board = 
        [[Rook.new(0), Knight.new(0), Bishop.new(0), Queen.new(0), King.new(0), Bishop.new(0), Knight.new(0), Rook.new(0)],                                      
@@ -216,13 +238,22 @@ class GameBoard
         piece = self.get_spot(pos1)
         return false if !piece
         legal = piece.legal_move?(pos1, pos2, self)
+        if Array === legal
+
+            rook_spot = legal[0]
+            new_rook_spot = legal[1]
+            
+            move_piece(rook_spot, new_rook_spot)
+         #   return true
+        end
         if legal
-            piece = get_spot([pos2[0],pos2[1]])
-            if King === piece
-                @game_lost = piece.team
+            piece2 = get_spot([pos2[0],pos2[1]])
+            if King === piece2
+                @game_lost = piece2.team
             end
 
             @board[pos2[0]][pos2[1]] = @board[pos1[0]][pos1[1]]
+            @board[pos2[0]][pos2[1]].has_moved = true
             @board[pos1[0]][pos1[1]] = nil
             if Pawn === piece
                 if pos2[0] == 0 || pos2[0] == 7
@@ -326,7 +357,7 @@ class GameBoard
         for i in (0..7)
             for j in (0..7)
                 if piece.legal_move?(pos, [i,j], self)
-                    print "X"
+                    print "X "
                     legal_moves << [i,j]
                 else
                     spot = @board[i][j]
@@ -346,6 +377,7 @@ class GameBoard
             print "\n"
         end
         print "\n"
+        return false if legal_moves.size < 1
         return legal_moves
     end
 
@@ -359,7 +391,12 @@ while true do
     piece = gets.chomp
     file = 'abcdefgh'.rindex(piece[0]).to_i
     rank = 8 - piece[1].to_i 
-    board.show_legal_moves([rank, file])
+    while !board.show_legal_moves([rank, file]) do
+        puts "Illegal piece. Try again. Select a piece to move:"
+        piece = gets.chomp
+        file = 'abcdefgh'.rindex(piece[0]).to_i
+        rank = 8 - piece[1].to_i 
+    end
     puts "Select a spot to move them to:"
     piece = gets.chomp
     file_2 = 'abcdefgh'.rindex(piece[0]).to_i
