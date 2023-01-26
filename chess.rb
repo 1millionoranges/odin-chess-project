@@ -498,7 +498,8 @@ class GameBoard
         return spots
     end
     def show_board
-        for row in @board
+        @board.each.with_index do |row, row_index|
+            print ((8-row_index).to_s + "  |")
             for spot in row
                 if spot
                     if spot.team == 0
@@ -516,7 +517,7 @@ class GameBoard
             end
             print "\n"
         end
-        print "\n"
+        print "   |_______________\n    A B C D E F G H\n"
     end
     def get_all_legal_moves(pos)
         piece = self.get_spot(pos)
@@ -550,6 +551,7 @@ class GameBoard
         return false if !piece
         legal_moves = get_all_legal_moves(pos)
         for i in (0..7)
+            print ((8-i).to_s + "  |")
             for j in (0..7)
                 if legal_moves.include?([i,j])
                     print "X "
@@ -570,7 +572,7 @@ class GameBoard
             end
             print "\n"
         end
-        print "\n"
+        print "   |_______________\n    A B C D E F G H\n"
         return false if legal_moves.size < 1
         return legal_moves
     end
