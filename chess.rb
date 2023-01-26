@@ -582,34 +582,71 @@ end
 board = GameBoard.new()
 board.reset_game
 board.show_board
-while true do
-    puts "Select a piece to move:"
+def get_user_spot
     piece = gets.chomp
-    file = 'abcdefgh'.rindex(piece[0]).to_i
-    rank = 8 - piece[1].to_i 
-    while !board.show_legal_moves([rank, file]) do
-        puts "Illegal piece. Try again. Select a piece to move:"
-        piece = gets.chomp
-        file = 'abcdefgh'.rindex(piece[0]).to_i
-        rank = 8 - piece[1].to_i 
+    file_char = piece[0]
+    rank_char = piece[1]
+    if !'abcdefgh'.include?(file_char) || !'12345678'.include?(rank_char)
+        return false
     end
-    puts "Select a spot to move them to:"
-    piece = gets.chomp
-    file_2 = 'abcdefgh'.rindex(piece[0]).to_i
-    rank_2 = 8 - piece[1].to_i
-    board.move_piece([rank, file], [rank_2, file_2])
+    file = 'abcdefgh'.rindex(file_char).to_i
+    rank = 8 - rank_char.to_i
+    return [rank, file]
+end
+def get_user_move(team, game_board)
+    
+
+    game_board.show_board
+    while true
+        spot1 = get_user_spot
+        piece1 = game_board.get_spot(spot1)
+        if !piece1
+            game_board.show_board
+            print "There is no piece there.\n"
+            next
+        end
+        if piece1.team != team
+            game_board.show_board
+            print "That is not your piece.\n"
+            next
+        end
+        legal_moves = game_board.get_all_legal_moves(spot1)
+        p legal_moves
+        if legal_moves.size < 1
+            game_board.show_board
+            print "That piece has no legal moves.\n"
+            next
+        end
+        break
+    end
+    game_board.show_legal_moves(spot1)
+    legal_moves = game_board.get_all_legal_moves(spot1)
+    spot2 = get_user_spot
+    while !legal_moves.include?(spot2)
+        print "Cannot move there. pick one of the spots indicated.\n"
+        spot2 = get_user_spot
+    end
+    return [spot1, spot2]
+end
+
+while true do
+    move = get_user_move(1, board)
+    board.move_piece(move[0], move[1])
     if board.is_king_in_check_after_every_move?(0)
         board.show_board
-        print "blue wins by checkmate"
+        print "blue wins by checkmate\n"
         break
-    elsif board.is_king_in_check_after_every_move?(1)
+    end
+    move = get_user_move(0, board)
+    board.move_piece(move[0], move[1])
+    if board.is_king_in_check_after_every_move?(1)
         board.show_board
-        print "red wins by checkmate"
+        print "red wins by checkmate\n"
         break
     end
     board.show_board
     if board.game_lost
-        print "\n#{board.game_lost} team just lost the game!"
+        print "\n#{board.game_lost} team just lost the game!\n"
         break
     end
 end
