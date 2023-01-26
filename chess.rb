@@ -67,7 +67,7 @@ class King < Piece
                 return true
             end
         elsif(pos1[0] == pos2[0] && (pos1[1]-pos2[1]).abs == 2)
-            if self.has_moved || game_board.castled
+            if self.has_moved || game_board.castled[self.team]
                 return false
             else
                 if pos2[1] == 2
@@ -77,11 +77,12 @@ class King < Piece
                     rook_spot = [pos2[0], 7]
                     new_rook_spot = [pos2[0], 5]
                 end
+                return false if game_board.get_spot(new_rook_spot)
                 rook_spot_piece = game_board.get_spot(rook_spot)
           #      p rook_spot_piece
                 return false if !(Rook === rook_spot_piece)
                 return false if rook_spot_piece.has_moved
-
+                return false if !rook_spot_piece.legal_move?(rook_spot, new_rook_spot, game_board)
                 return [rook_spot, new_rook_spot] if can_move_to?(game_board, pos2)
             end
         end
@@ -352,7 +353,7 @@ class GameBoard
 
             rook_spot = legal[0]
             new_rook_spot = legal[1]
-            @castled = true
+            @castled[piece.team] = true
             move_piece(rook_spot, new_rook_spot)
          #   return true
         end
@@ -611,7 +612,6 @@ def get_user_move(team, game_board)
             next
         end
         legal_moves = game_board.get_all_legal_moves(spot1)
-        p legal_moves
         if legal_moves.size < 1
             game_board.show_board
             print "That piece has no legal moves.\n"
